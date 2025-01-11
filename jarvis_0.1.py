@@ -2,6 +2,8 @@ import pyttsx3
 import datetime
 import speech_recognition as sr
 import pause
+import os
+import random
 
 # Inicializa o TTS
 texto_fala = pyttsx3.init()
@@ -64,6 +66,18 @@ def microfone():
             falar("Houve um problema na conexão. Por favor, tente novamente.")
             return None
 
+# Função para tocar uma música aleatória
+def tocar_musica():
+    pasta_musicas = 'musicas/'  # Substitua pelo caminho da sua pasta de músicas
+    musicas = os.listdir(pasta_musicas)
+    if musicas:
+        musica = random.choice(musicas)
+        caminho_completo = os.path.join(pasta_musicas, musica)
+        os.system(f'start {caminho_completo}')  # No Windows, use 'start'
+        falar(f"Tocando {musica}")
+    else:
+        falar("Não encontrei músicas na pasta.")
+
 # Função principal para processar comandos
 if __name__ == "__main__":
     bem_vindo()
@@ -100,6 +114,8 @@ if __name__ == "__main__":
                     break
                 else:
                     falar("Por favor, diga um número válido.")
+        elif 'tocar música' in comando:
+            tocar_musica()
         elif 'obrigado' in comando:
             falar("Tudo bem! Se precisar estou aqui!")
             quit()
