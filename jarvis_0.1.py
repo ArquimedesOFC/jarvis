@@ -4,38 +4,35 @@ import speech_recognition as sr
 import pause
 import os
 import random
+import subprocess
 
 # Inicializa o TTS
 texto_fala = pyttsx3.init()
+texto_fala.setProperty("rate", 195)  # Ajusta a velocidade da fala
+voices = texto_fala.getProperty('voices')
+texto_fala.setProperty('voice', voices[0].id)  # 0 = Masculina, 1 = Feminina
 
 def falar(audio):
-    texto_fala.setProperty("rate", 195)  # Ajusta a velocidade da fala
-    voices = texto_fala.getProperty('voices')
-    texto_fala.setProperty('voice', voices[0].id)  # 0 = Masculina, 1 = Feminina
     texto_fala.say(audio)
     texto_fala.runAndWait()
 
-# Função para obter a hora atual
 def tempo():
     hora_atual = datetime.datetime.now().strftime("%I:%M")
     falar(f"Agora são, {hora_atual}")
     print(f"Hora: {hora_atual}")
 
-# Função para obter a data atual
 def data():
-    # Lista com os meses por extenso
     meses = [
         "janeiro", "fevereiro", "março", "abril", "maio", "junho",
         "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"
     ]
     agora = datetime.datetime.now()
     dia = agora.day
-    mes = meses[agora.month - 1]  # Obtém o nome do mês correspondente
+    mes = meses[agora.month - 1]
     ano = agora.year
     falar(f"Hoje é dia {dia} de {mes}, de {ano}!")
     print(f"Data: {dia} de {mes} de {ano}")
 
-# Função para saudar o usuário com base na hora
 def bem_vindo():
     hora = datetime.datetime.now().hour
     if 6 <= hora < 12:
@@ -46,18 +43,17 @@ def bem_vindo():
         saudacao = "Boa noite senhor! Bem vindo de volta!"
     falar(saudacao)
 
-# Função para capturar comandos de voz
 def microfone():
     r = sr.Recognizer()
     with sr.Microphone() as source:
         print("Aguardando sua fala...")
-        r.pause_threshold = 1  # Tempo de pausa antes de processar a fala
+        r.pause_threshold = 1
         try:
-            audio = r.listen(source)  # Escuta o áudio do usuário
+            audio = r.listen(source)
             print("Processando...")
-            comando = r.recognize_google(audio, language='pt-BR')  # Converte áudio para texto
+            comando = r.recognize_google(audio, language='pt-BR')
             print(f"Você disse: {comando}")
-            return comando.lower()  # Retorna o texto reconhecido em minúsculas
+            return comando.lower()
         except sr.UnknownValueError:
             print("Desculpe, não entendi o que você disse.")
             return None
@@ -65,36 +61,39 @@ def microfone():
             print(f"Erro na conexão: {e}")
             falar("Houve um problema na conexão. Por favor, tente novamente.")
             return None
+        except Exception as e:
+            print(f"Ocorreu um erro: {e}")
+            falar("Desculpe, algo deu errado. Tente novamente.")
+            return None
 
-# Função para tocar uma música aleatória
 def tocar_musica():
-    pasta_musicas = 'musicas/'  # Substitua pelo caminho da sua pasta de músicas
-    musicas = os.listdir(pasta_musicas)
-    if musicas:
-        musica = random.choice(musicas)
-        caminho_completo = os.path.join(pasta_musicas, musica)
-        os.system(f'start {caminho_completo}')  # No Windows, use 'start'
-        falar(f"Tocando {musica}")
-    else:
-        falar("Não encontrei músicas na pasta.")
+    pasta_musicas = 'musicas/'  
+    try:
+        musicas = os.listdir(pasta_musicas)
+        if musicas:
+            musica = random.choice(musicas)
+            caminho_completo = os.path.join(pasta_musicas, musica)
+            subprocess.Popen(['start', caminho_completo], shell=True)
+            falar(f"Tocando {musica}")
+        else:
+            falar("Não encontrei músicas na pasta.")
+    except Exception as e:
+        print(f"Erro ao tocar música: {e}")
+        falar("Houve um problema ao tentar tocar a música.")
 
-# Função principal para processar comandos
 if __name__ == "__main__":
     bem_vindo()
     while True:
         print("Escutando...")
         comando = microfone()
 
-        # Verifica se o comando não é nulo
         if comando is None:
             continue
 
-        # Se o usuário disser "Jarvis", o programa responde "Estou lhe ouvindo"
-        if 'jar' in comando:
+        if 'jarvis' in comando:
             falar("Estou lhe ouvindo!")
-            continue  # Volta para escutar mais comandos
+            continue
 
-        # Responde a outros comandos
         if 'como' in comando:
             falar("Estou bem! Obrigado por perguntar.")
             falar("O que posso fazer para ajudá-lo?")
@@ -117,7 +116,7 @@ if __name__ == "__main__":
         elif 'tocar música' in comando:
             tocar_musica()
         elif 'obrigado' in comando:
-            falar("Tudo bem! Se precisar estou aqui!")
-            quit()
+            falar("Tudo bem! Se precisar, estou aqui!")
+            break
         else:
             falar("Desculpe, não entendi o comando. Pode repetir?")
